@@ -4,6 +4,14 @@ const Exam = require("../models/examModel");
 
 const examRouter = express.Router();
 
+examRouter.get('/home', expressAsyncHandler(async (req, res) => {
+    try {
+            res.json({status:200, "title": "hello_wourld"})
+    } catch (error) {
+        res.json({status:403, error})
+    }
+}))
+
 examRouter.get('/showexams', expressAsyncHandler(async (req, res) => {
     try {
         const exams = await Exam.find()
