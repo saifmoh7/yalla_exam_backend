@@ -63,11 +63,11 @@ userRouter.post('/finduser', expressAsyncHandler(async (req, res) => {
 
         if (user.email === req.body.email) {
             if (user.password === req.body.password) {
-                if (user.approval === "Approval") {
-                    const userData = {"userName": user.userName, "email": user.email, "role": user.role, "approval": user.approval, "accountType": user.accountType}
+                if (user.approval === "Verified") {
+                    const userData = {"userName": user.userName, "email": user.email, "role": user.role, "verified": user.verified, "accountType": user.accountType}
                     res.json({userData, message: "login success"})                    
                 } else {
-                    res.json({userData, message: "account not approval"})
+                    res.json({userData, message: "account not verified"})
                 }
             } else {
                 res.json({message: "incorrect password"})
