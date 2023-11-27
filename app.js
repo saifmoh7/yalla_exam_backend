@@ -30,5 +30,5 @@ app.use('/users', userRouter);
 
 
 app.listen(process.env.PORT || port, () => {
-    console.log(`Server at http://localhost:${port}`)
+    console.log(`Server at http://localhost:${process.env.PORT}`)
 })

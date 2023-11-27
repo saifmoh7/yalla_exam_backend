@@ -6,8 +6,11 @@ const userSchema = new mongoose.Schema({
         password: {type: String, require: true},
         role: {type: String, require: true, default: "notAdmin"},
         approval: {type: String, require: true, default: "notApproval"},
+        verified: {type: String, require: true, default: "notverified"},
         your_Scores: {type: Array, require: true, default: []},
-        accountType: {type: Object, require: true, default: {"accountType": "standard"}}
+        accountType: {type: String, require: true, default: "standard"},
+        verifiyNumber: {type: Number,require: true},
+        verificationAttempts: {type: Number,require: true, default: 0},
     },
     {
         timestamps: true,

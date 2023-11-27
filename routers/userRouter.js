@@ -2,54 +2,59 @@ const express = require("express")
 const expressAsyncHandler = require("express-async-handler");
 
 const User = require("../models/userModel");
+const sendMailer = require("../models/mailerModel");
 
 const userRouter = express.Router();
+
+// -------------- SIGN UP USER -------------------   
 
 userRouter.post('/adduser', expressAsyncHandler(async (req, res) => {
 
     try {
-        const allUser = await User.find()
         const userData = await User.find({"email": req.body.email})
         const userfound = userData.find(({ email }) => email === req.body.email) || "";
 
-        console.log(allUser)
-        console.log(userData)
-        console.log(userfound)
-        console.log(allUser.length)
+        console.log("userData" + userData)
+        console.log("userfound" + userfound)
 
-        if (req.body.email.match(/^[A-Za-z\._\-0-9]*[@][A-Za-z]*[\.][a-z]{2,4}$/)) {
-            res.json({message: "Invalid Email"})
-            console.log("ok")
-        }else{
+        // if (req.body.email.match(/^([a-zA-Z0-9_\.\-]+)@([\da-zA-Z\.\-]+)\.([a-zA-Z\.]{2,6})$/)) {
+        //     res.json({message: "Invalid Email"})
+        //     console.log("Invalid Email")
+        // }
+        // else
+        // {
             if (userfound.email === req.body.email) {
                 res.json({message: "this email is already existing"})
             } else {
-                if (allUser.length >=10 ) {
-                    res.json({message: "the users found is too many"})
-                } else {
+                    const randomNumber = Math.floor(Math.random() * 900000) + 100000;
                     const user = User({
                         userName: req.body.userName,
                         email: req.body.email,
                         password: req.body.password,
+                        verifiyNumber: randomNumber
                     });
                 
                     const createdUser = await user.save();
-                
+                    
+                    sendMailer("saif20moh17@gmail.com", `<p>${randomNumber}</p>`)
+
                     if (createdUser) {
                         res.json({
                             userData: {userName: createdUser.userName, email: createdUser.email},
-                            message: "signup success"
+                            // message: `"signup success, now verify your account by enter 6-digit we send it to ${req.body.email}"`
+                            message: "verify now"
                         })
                     } else {console.log("signup fail")
                         res.json({message: "signup fail"})}
-                }
             }
-        }
+        // }
     } catch (error) {
         console.log("signupfail")
         res.json({message: "signup fail"})
     }
 }))
+
+// -------------- LOG IN USER ------------------- 
 
 userRouter.post('/finduser', expressAsyncHandler(async (req, res) => {
     try {
@@ -73,6 +78,8 @@ userRouter.post('/finduser', expressAsyncHandler(async (req, res) => {
         res.json({error, message: "incorrect email"})
     }
 }))
+
+// -------------- DELETE USER ------------------- 
 
 userRouter.post('/deleteuser', expressAsyncHandler(async (req, res) => {
     try {
@@ -103,6 +110,8 @@ userRouter.post('/deleteuser', expressAsyncHandler(async (req, res) => {
     }
 }))
 
+// -------------- APPROE USER ------------------- 
+
 userRouter.post('/approveuser', expressAsyncHandler(async (req, res) => {
     try {
         const userData = await User.find({"email": req.body.adminEmail})
@@ -131,6 +140,43 @@ userRouter.post('/approveuser', expressAsyncHandler(async (req, res) => {
         res.json({status:403, error, message: "email not found"})
     }
 }))
+
+// -------------- VERIFY ACCOUNT -------------------
+
+userRouter.post('/verifyaccount', expressAsyncHandler(async (req, res) => {
+    try {
+        const userData = await User.find({"email": req.body.userEmail})
+        const user = userData.find(({ email }) => email === req.body.userEmail);
+        const verifiyNumber = parseInt(req.body.verifiyNumber)
+        console.log(user.verifiyNumber)
+        console.log(verifiyNumber)
+
+        if (user.verifiyNumber === verifiyNumber) {
+        
+            const verifyUser = await User.findOneAndUpdate({"email" : req.body.userEmail}, {"verified" : "Verified"})
+            console.log(verifyUser)
+            if (verifyUser) {
+                await User.updateOne({"email" : req.body.userEmail}, {$unset: { verifiyNumber: "", verificationAttempts: "" }})
+                res.json({message: "email is verifing"})
+            } else {
+                res.json({message: "email is not verifing"})
+            }
+        }else {
+            let verificationAttempts = user.verificationAttempts + 1
+            await User.findOneAndUpdate({"email" : req.body.userEmail}, {"verificationAttempts" : verificationAttempts})
+            if (user.verificationAttempts >= 4) {
+                await User.findOneAndRemove({"email": req.body.userEmail})
+                res.json({message: "fail sign up"})
+            } else {
+                res.json({message: "incorrect verify code"})  
+            }
+        }
+    } catch (error) {
+        res.json({status:403, error, message: "email not found"})
+    }
+}))
+
+// -------------- ASSISTANT USER -------------------
 
 userRouter.post('/assistantuser', expressAsyncHandler(async (req, res) => {
     try {
@@ -207,18 +253,9 @@ userRouter.post('/getscores', expressAsyncHandler(async (req, res) => {
         const userData = await User.find({"email": req.body.email})
         const user = userData.find(({ email }) => email === req.body.email);
         const your_Scores = user.your_Scores
-        // console.log(your_Scores)
 
         if (your_Scores) {
-            // your_Scores.push(req.body.your_Scores)
-            // console.log(your_Scores)
-            // const updateScores = await User.findOneAndUpdate({"email" : req.body.email}, {"your_Scores" : your_Scores})
-            // // const scores = your_Scores
-            // if (updateScores) {
                 res.json({status:200, message: "get scores success", your_Scores})
-            // } else {
-            //     res.json({status:404, message: "scores dont update"})
-            // }
             
         } else {
             res.json({status:404, message: "scores not found"})
