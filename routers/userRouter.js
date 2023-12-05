@@ -12,7 +12,7 @@ userRouter.post('/adduser', expressAsyncHandler(async (req, res) => {
 
     try {
         const userData = await User.find({"email": req.body.email})
-        const userfound = userData.find(({ email }) => email === req.body.email) || "";
+        const userfound =  userData.find(({ email }) => email === req.body.email) || "";
 
         console.log("userData" + userData)
         console.log("userfound" + userfound)
@@ -36,7 +36,7 @@ userRouter.post('/adduser', expressAsyncHandler(async (req, res) => {
                 
                     const createdUser = await user.save();
                     
-                    sendMailer("saif20moh17@gmail.com", `<p>${randomNumber}</p>`)
+                    sendMailer(req.body.email, `<p>${randomNumber}</p>`)
 
                     if (createdUser) {
                         res.json({
@@ -49,7 +49,7 @@ userRouter.post('/adduser', expressAsyncHandler(async (req, res) => {
             }
         // }
     } catch (error) {
-        console.log("signupfail")
+        console.log(error)
         res.json({message: "signup fail"})
     }
 }))
